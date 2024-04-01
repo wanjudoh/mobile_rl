@@ -9,6 +9,7 @@ from ray import tune
 # from ray.rllib.algorithms.ppo import PPOConfig
 # from ray.rllib.algorithms.ppo import ppo
 from ray.rllib.agents import ppo
+from mobile_config import *
 
 class RL_Config:
     """Set rllib configurations and algorithm"""
@@ -53,19 +54,19 @@ class RL_Config:
         # config["log_level"] = "ERROR" # DEBUG,INFO, ERROR
         # config.training(gamma=0.9, lr=0.01, sgd_minibatch_size=4)
         # config.rollouts(num_rollout_workers=1)
-        config["horizon"] = 4
+        config["horizon"] = MobileConfig.train_batch_size
         config["num_workers"] = num_workers
         #config["train_batch_size"] = 32
-        config["train_batch_size"] = 4
+        config["train_batch_size"] = MobileConfig.train_batch_size
         config["batch_mode"] = "complete_episodes"
         config["lr"] = 0.01
         config["gamma"] = 0.9
         #config["sgd_minibatch_size"] = 32
-        config["sgd_minibatch_size"] = 4
+        config["sgd_minibatch_size"] = MobileConfig.train_batch_size
         config["model"]["fcnet_hiddens"] = [16, 32]
         config["explore"] = True
         config["disable_env_checking"] = True
-        config["simple_optimizer"] = True
+        # config["simple_optimizer"] = True
 
         # config.environment(disable_env_checking=True)
         # agent = config.build(env=select_env)

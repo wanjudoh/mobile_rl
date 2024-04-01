@@ -9,3 +9,5 @@ class MobileConfig:
     exploration:    float = 0.05
 
     startup_file_path:  str = "/home/wjdoh/rl_m3/startup.txt"
+
+    train_batch_size:   int = 4

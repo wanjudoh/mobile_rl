@@ -61,5 +61,5 @@ class Reward:
         """
 
         inverse_startup_time = 1/Reward.avg_startup
-        return inverse_startup_time
+        return inverse_startup_time*100
 

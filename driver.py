@@ -65,7 +65,7 @@ def driver(n_iter):
     timer = Timer()
 
     #n_infer = 32
-    n_infer = 4
+    n_infer = MobileConfig.train_batch_size
 
     for itr in range(n_iter):
         run_infer(infer, n_infer, chkpt, timer)
