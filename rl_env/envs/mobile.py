@@ -24,7 +24,7 @@ class MobileEnv(gym.Env):
                                 low=0.0,
                                 high=np.inf,
                                 shape=(Action.action_num,),
-                                dtype=np.int16)
+                                dtype=np.float32)
 
 
         # Observation [pgpgin, pgpgout, pswpin, pswpout]
@@ -32,7 +32,7 @@ class MobileEnv(gym.Env):
                                     low=-0.0,
                                     high=np.inf,
                                     shape=(State.state_num,),
-                                    dtype=np.int16)
+                                    dtype=np.float32)
         self.reset()
 
 
@@ -57,7 +57,7 @@ class MobileEnv(gym.Env):
         self.done = False
         self.info = {}
 
-        self.experience_buf = Experience.read() 
+        self.experience_buf = Experience.read()
 
         return self.state
 
@@ -74,13 +74,11 @@ class MobileEnv(gym.Env):
         """
 
         if self.experience_buf:
-            # print("hi 1")
-            key, experience = random.choice(list(self.experience_buf.items()))
-            # print(experience)
+            # key, experience = random.choice(list(self.experience_buf.items()))
+            key, experience = self.experience_buf.popitem()
             self.state = self.__get_state(experience)
             self.reward = self.__get_reward(experience)
         else:
-            # print("hi 2")
             self.state = np.array([0.0] * State.state_num, dtype=np.float32)
             self.reward = 0
 

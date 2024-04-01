@@ -53,7 +53,7 @@ class RL_Config:
         # config["log_level"] = "ERROR" # DEBUG,INFO, ERROR
         # config.training(gamma=0.9, lr=0.01, sgd_minibatch_size=4)
         # config.rollouts(num_rollout_workers=1)
-        config["horizon"] = 32
+        config["horizon"] = 4
         config["num_workers"] = num_workers
         #config["train_batch_size"] = 32
         config["train_batch_size"] = 4
