@@ -3,6 +3,7 @@ from dataclasses import dataclass
 
 from mobile_config import *
 from utils import *
+import subprocess
 
 @dataclass
 class MobileStats:
@@ -10,6 +11,7 @@ class MobileStats:
     pgpgout:        int = 0
     pswpin:         int = 0
     pswpout:        int = 0
+    pageoutrun:     int = 0
 
 class State:
     last_state = MobileStats()
@@ -21,51 +23,7 @@ class State:
 
     @staticmethod
     def __init__():
-        try:
-            State.proc_vmstat_file = open("/proc/vmstat", "r")
-        except IOError:
-            print("OS error occurred trying to open /proc/vmstat")
-            exit()
-        
-        State.read()
-   
-    @staticmethod
-    def read():
-        # Read /proc/vmstat and update state.
-        pgpgin = 0
-        pgpgout = 0
-        pswpin = 0
-        pswpout = 0
-
-
-        lines = None
-        while lines is None:
-            try:
-                lines = State.proc_vmstat_file.readlines()
-            except:
-                State.proc_vmstat_file = open("/proc/vmstat", "r")
-
-        for line in lines:
-            if line.split()[0] == "pgpgin":
-                pgpgin = int(line.split()[1])
-            elif line.split()[0] == "pgpgout":
-                pgpgout = int(line.split()[1])
-            elif line.split()[0] == "pswpin":
-                pswpin = int(line.split()[1])
-            elif line.split()[0] == "pswpout":
-                pswpout = int(line.split()[1])
-
-        State.delta_state.pgpgin = pgpgin - State.last_state.pgpgin
-        State.delta_state.pgpgout = pgpgout - State.last_state.pgpgout
-        State.delta_state.pswpin = pswpin - State.last_state.pswpin
-        State.delta_state.pswpout = pswpout - State.last_state.pswpout
-
-        State.last_state = MobileStats(pgpgin, pgpgout, pswpin, pswpout)
-
-        State.proc_vmstat_file.seek(0)
-
-        # logging.info(f"[State] current state: {pgpgin} {pgpgout} {pswpin} {pswpout}")
-        # State.print()
+        State.get_state()
 
     @staticmethod
     def get_state():
@@ -74,11 +32,32 @@ class State:
 
         :return: np array state
         """
-        State.read()
+        try:
+            result = subprocess.run(["adb", "shell", "cat", "/proc/vmstat", "|", "grep", "-E", "'pgpgin|pgpgout|pswpin|pswpout|pageoutrun'", "|", "awk", "'{print $2}'"], stdout=subprocess.PIPE, text=True)
+        except:
+            logging.info("read /proc/vmstat failed.")
+            exit()
+
+        stats = result.stdout.split('\n')
+
+        State.delta_state.pgpgin = int(stats[0]) - State.last_state.pgpgin
+        State.delta_state.pgpgout = int(stats[1]) - State.last_state.pgpgout
+        State.delta_state.pswpin = int(stats[2]) - State.last_state.pswpin
+        State.delta_state.pswpout = int(stats[3]) - State.last_state.pswpout
+        State.delta_state.pageoutrun = int(stats[4]) - State.last_state.pageoutrun
+
+        State.last_state.pgpgin = int(stats[0])
+        State.last_state.pgpgout = int(stats[1])
+        State.last_state.pswpin = int(stats[2])
+        State.last_state.pswpout = int(stats[3])
+        State.last_state.pageoutrun = int(stats[4])
+
+        State.print()
+
         return np.array([State.delta_state.pgpgin, State.delta_state.pgpgout, State.delta_state.pswpin, State.delta_state.pswpout], dtype=np.float32)
 
     @staticmethod
     def print():
         """Print current state."""
 
-        logging.info(f"[State] delta state: {State.delta_state.pgpgin} {State.delta_state.pgpgout} {State.delta_state.pswpin} {State.delta_state.pswpout}\n")
+        logging.info(f"[State] delta state: {State.delta_state.pgpgin} {State.delta_state.pgpgout} {State.delta_state.pswpin} {State.delta_state.pswpout} {State.delta_state.pageoutrun}")

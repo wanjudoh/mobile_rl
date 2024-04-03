@@ -45,12 +45,6 @@ class MobileEnv(gym.Env):
 
 
     def reset(self):
-        """Reset environment.
-        Configured as OpenAI Gym doc.
-
-        :return: state
-        """
-
         # Reset env state & reward
         self.state = np.array([0.0] * State.state_num, dtype=np.float32)
         self.reward = 0
@@ -63,18 +57,7 @@ class MobileEnv(gym.Env):
 
 
     def step(self, action):
-        """Step action.
-        Configured as OpenAI Gym doc.
-
-        Step 1. Read random entry from experience_buf
-        Step 2. Obtain state, reward from the entry
-        Step 3. Delete read entry
-
-        :return: [state, reward, done, info]
-        """
-
         if self.experience_buf:
-            # key, experience = random.choice(list(self.experience_buf.items()))
             key, experience = self.experience_buf.popitem()
             self.state = self.__get_state(experience)
             self.reward = self.__get_reward(experience)

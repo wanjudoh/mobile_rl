@@ -1,6 +1,10 @@
 import numpy as np
 import random
 
+import os
+import subprocess
+import time
+
 from mobile_config import *
 from mobile_state import *
 from utils import *
@@ -23,27 +27,8 @@ class Action:
     swappiness = -1
 
     @staticmethod
-    def __init__():
-        Action.read_swappiness()
-
-    @staticmethod
-    def read_swappiness():
-        """
-        Read /proc/sys/vm/swappiness file
-        """
-
-        raw = None
-        while raw is None:
-            try:
-                action_file = open("/proc/sys/vm/swappiness", "r")
-                # action_file = open("./swappiness.txt", "r")
-                raw = action_file.read()
-            except:
-                continue
-
-        # get swappiness
-        Action.swappiness = int(raw.split()[0])
-        return Action.swappiness
+    def __init__(swappiness):
+        Action.swappiness = swappiness
 
     @staticmethod
     def write(swappiness):
@@ -53,15 +38,19 @@ class Action:
         @swappiness: swappiness value
         """
 
-        done = False
-        while not done:
-            try:
-                # action_file = open("/proc/sys/vm/swappiness", "w")
-                action_file = open("./swappiness.txt", "w")
-                action_file.write(f"{swappiness}\n")
-                done = True
-            except IOError:
-                continue
+        try:
+            os.system(f"adb shell 'echo {swappiness} > /sdcard/wjdoh/swappiness.txt'")
+        except:
+            logging.info("write /sdcard/wjdoh/swappiness.txt failed.")
+            exit()
+
+        while True:
+            result = subprocess.run(["adb", "shell", "test", "-f", "/sdcard/wjdoh/swappiness.txt", "&&", "echo", "True"], stdout=subprocess.PIPE, text=True)
+            if len(result.stdout.split()):
+                logging.info("action does not applied yet.")
+                time.sleep(1)
+            else:
+                break
 
     @staticmethod
     def nn_to_action(nn_out):

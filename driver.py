@@ -1,6 +1,8 @@
 from train import *
 from infer import *
 from utils import *
+import subprocess
+import os
 
 def run_infer(infer, n_infer, chkpt, timer):
     """Driver for running infer.
@@ -14,8 +16,10 @@ def run_infer(infer, n_infer, chkpt, timer):
     timer.start()
     infer.reset(chkpt)
 
-    for itr in range(n_infer):
-        infer.infer()
+    infer.infer(True)
+
+    for itr in range(n_infer-1):
+        infer.infer(False)
 
     Experience.write()
     Experience.reset()
@@ -56,18 +60,36 @@ def driver(n_iter):
 
     chkpt = "./pre-trained/checkpoint"
 
-    Action.__init__()
+    swappiness = 0
+    while True:
+        result = subprocess.run(['adb', 'shell', 'cat', '/sdcard/wjdoh/swappiness.txt'], stdout=subprocess.PIPE, text=True)
+        if result.stdout == "":
+            logging.info("Failed to read /sdcard/wjdoh/swappiness.txt!")
+            time.sleep(1)
+            continue
+        swappiness = int(result.stdout)
+        os.system("adb shell rm /sdcard/wjdoh/swappiness.txt")
+        break
+
+    logging.info(f"Initial swappiness: {swappiness}")
+    Action.__init__(int(swappiness))
     State.__init__()
+    time.sleep(MobileConfig.apply_wait)
 
     # infer = Infer(chkpt)
     infer = Infer()
     train = Train()
     timer = Timer()
 
-    #n_infer = 32
     n_infer = MobileConfig.train_batch_size
 
     for itr in range(n_iter):
+        State.get_state()
+        while State.delta_state.pageoutrun == 0:
+            logging.info(f"pageoutrun == 0! sleep {MobileConfig.apply_wait}")
+            time.sleep(MobileConfig.apply_wait)
+            State.get_state()
+
         run_infer(infer, n_infer, chkpt, timer)
         chkpt = run_train(train, timer)
 
