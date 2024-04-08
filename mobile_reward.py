@@ -1,6 +1,8 @@
 import time
 import subprocess
 
+import math
+
 from mobile_config import *
 from mobile_action import *
 from mobile_state import *
@@ -13,36 +15,15 @@ class RewardStats:
     speculative_pgfault:    int = 0
 
 class Reward:
-    last = RewardStats()
-    delta = RewardStats()
+    last_reward = RewardStats()
+    delta_reward = RewardStats()
 
     @staticmethod
-    def wait_for_reward():
-        try:
-            result = subprocess.run(["adb", "shell", "cat", "/proc/vmstat", "|", "grep", "-E", "'pgpgin|pgalloc_normal|speculative_pgfault '", "|", "awk", "'{print $2}'"], stdout=subprocess.PIPE, text=True)
-        except:
-            logging.info("read /proc/vmstat failed.")
-            exit()
+    def read_reward():
+        if Reward.delta_reward.pgpgin == 0 or Reward.delta_reward.pgalloc_normal == 0 or Reward.delta_reward.speculative_pgfault == 0:
+            return None
+        return -(math.log(Reward.delta_reward.pgpgin + Reward.delta_reward.pgalloc_normal/2 + Reward.delta_reward.speculative_pgfault))
+        # return -((Reward.delta_reward.pgpgin + Reward.delta_reward.pgalloc_normal/2 + Reward.delta_reward.speculative_pgfault))
 
-        stats = result.stdout.split('\n')
-        Reward.last.pgpgin = int(stats[0])
-        Reward.last.pgalloc_normal = int(stats[1])
-        Reward.last.speculative_pgfault = int(stats[2])
-
-        time.sleep(MobileConfig.apply_wait)
-
-        try:
-            result = subprocess.run(["adb", "shell", "cat", "/proc/vmstat", "|", "grep", "-E", "'pgpgin|pgalloc_normal|speculative_pgfault '", "|", "awk", "'{print $2}'"], stdout=subprocess.PIPE, text=True)
-        except:
-            logging.info("read /proc/vmstat failed.")
-            exit()
-
-        stats = result.stdout.split('\n')
-        Reward.delta.pgpgin = int(stats[0]) - Reward.last.pgpgin
-        Reward.delta.pgalloc_normal = int(stats[1]) - Reward.last.pgalloc_normal
-        Reward.delta.speculative_pgfault = int(stats[2]) - Reward.last.speculative_pgfault
-
-    @staticmethod
-    def get_reward():
-        return -(Reward.delta.pgpgin + Reward.delta.pgalloc_normal*0.1 + Reward.delta.speculative_pgfault)
-
+    def print():
+        logging.info(f"[Reward] {Reward.delta_reward.pgpgin} {Reward.delta_reward.pgalloc_normal} {Reward.delta_reward.speculative_pgfault} {Reward.read_reward()}")

@@ -63,10 +63,9 @@ function chrome() {
     cat /proc/vmstat >> ${vmlog}
     am start -W -n com.android.chrome/com.google.android.apps.chrome.Main 2>&1 | tee -a "${amlog}"
     cat /proc/vmstat >> ${vmlog}
-
     sleep 3
 
-    input tap 292 819
+    input tap 508 557
     sleep 2
     input text "weather"
     sleep 1
@@ -89,13 +88,14 @@ function chrome() {
     sleep 1
     input swipe 600 1400 600 1000 100
     sleep 1
-
     input swipe 600 1000 600 1400 100
     sleep 1
-    input tap 60 210
+    input keyevent KEYCODE_BACK
+    sleep 2
+    input keyevent KEYCODE_BACK
     sleep 2
 
-    input tap 292 819
+    input tap 508 557
     sleep 1
     input text "nasdaq"
     sleep 1
@@ -112,14 +112,12 @@ function chrome() {
     input swipe 600 1400 600 800 100
     sleep 3
     input tap 570 600
-    sleep 2
+    sleep 3
 
     input swipe 600 1000 600 1400 100
     sleep 1
     input tap 60 210
     sleep 2
-
-    export PACKAGE="com.android.chrome"
 }
 
 function youtube() {
@@ -155,7 +153,12 @@ function youtube() {
     input swipe 600 1400 600 800 100
     sleep 3
 
-    export PACKAGE="com.google.android.youtube"
+    input keyevent 4
+    sleep 1
+    input keyevent 4
+    sleep 1
+    input keyevent 4
+    sleep 1
 }
 
 function reddit() {
@@ -225,8 +228,8 @@ function reddit() {
     input keyevent 4
     input keyevent 4
     input keyevent 4
-
-    export PACKAGE="com.reddit.frontpage"
+    input keyevent 4
+    input keyevent 4
 }
 
 function facebook() {
@@ -270,7 +273,7 @@ function facebook() {
     input swipe 600 1400 600 800 100
     sleep 5
 
-    export PACKAGE="com.facebook.katana"
+    input keyevent 4
 }
 
 function twitter() {
@@ -314,7 +317,7 @@ function twitter() {
     input swipe 100 1500 100 700 100
     sleep 5
 
-    export PACKAGE="com.twitter.android"
+    input keyevent 4
 }
 
 function googlemap() {
@@ -384,20 +387,33 @@ function googlemap() {
     input swipe 500 2000 500 1400 100
     sleep 3
 
-    input swipe 500 2000 500 1400 100
+    input keyevent 4
+    sleep 1
+
+    input tap 996 991
     sleep 3
 
-    input swipe 500 2000 500 1400 100
+    input tap 575 210
     sleep 3
 
-    input swipe 500 2000 500 1400 100
+    input tap 553 349
     sleep 3
+
+    input tap 733 579
+    sleep 1
+
+    input tap 942 194
+    sleep 1
+
+    input tap 555 465
+    sleep 1
 
     input keyevent 4
     sleep 1
     input keyevent 4
     sleep 1
-    export PACKAGE="com.google.android.apps.maps"
+    input keyevent 4
+    sleep 1
 }
 
 function tiktok() {
@@ -436,7 +452,11 @@ function tiktok() {
 
     input swipe 600 1400 600 800 100
     sleep 7
-    export PACKAGE="com.ss.android.ugc.trill"
+
+    input keyevent 4
+    sleep 1
+    input keyevent 4
+    sleep 1
 }
 
 function camera() {
@@ -446,28 +466,28 @@ function camera() {
     sleep 3
 
     input tap 558 1760
-    sleep 1
+    sleep 2
 
     input tap 849 1763  # front camera
     sleep 3
 
     input tap 558 1760  # take a photo
-    sleep 1
+    sleep 2
 
     input tap 254 1760  # gallery
-    sleep 1
+    sleep 3
 
     input swipe 508 842 508 1508 100
     sleep 3
 
     input tap 864 2008
-    sleep 1
+    sleep 2
 
     input tap 864 2008
-    sleep 1
+    sleep 2
 
     input tap 633 2181
-    sleep 1
+    sleep 2
 
     input tap 558 1760  # take a viedo
     sleep 15
@@ -504,7 +524,10 @@ function camera() {
     input tap 558 1760
     sleep 1
 
-    export PACKAGE="com.google.android.GoogleCamera"
+    input keyevent 4
+    sleep 1
+    input keyevent 4
+    sleep 1
 }
 
 function gmail() {
@@ -565,21 +588,35 @@ function gmail() {
 
     input swipe 100 300 100 1500 100
     sleep 5
-    export PACKAGE="com.google.android.gm"
+
+    input keyevent 4
+    sleep 1
+    input keyevent 4
+    sleep 1
 }
 
 function simple_seq() {
-    for i in $(seq 0 2)
+    for i in $(seq 0 3)
     do
         chrome
         youtube
         reddit
-        # camera
+        camera
         facebook
         twitter
-        # gmail
+        gmail
         googlemap
-        # tiktok
+        tiktok
+    done
+}
+
+function workload_B() {
+    for i in $(seq 1 9)
+    do
+        chrome
+        youtube
+        reddit
+        facebook
     done
 }
 
@@ -622,8 +659,8 @@ echo "DROP CACHE"
 echo 3 > /proc/sys/vm/drop_caches
 
 echo "APP SEQ START"
-simple_seq
-#reddit
+# simple_seq
+workload_B
 
 echo "FORCE STOP"
 force_stop

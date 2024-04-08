@@ -10,6 +10,8 @@ from experience import *
 from train import *
 
 class Infer:
+    state = MobileStats()
+    action = -1
 
     def __init__(self, chkpt_file="./pre-trained/checkpoint", select_env="mobile"):
         logging.info("Infer initializing.")
@@ -21,15 +23,11 @@ class Infer:
         logging.info("Infer initialize complete.")
 
 
-    def __infer(self, is_first_time):
+    def __infer(self):
         timer = Timer()
         timer.start()
 
-        if not is_first_time:
-            # calculate delta state
-            state = State.get_state()
-        else:
-            state = np.array([State.delta_state.pgpgin, State.delta_state.pgpgout, State.delta_state.pswpin, State.delta_state.pswpout], dtype=np.float32)
+        state = State.read_state()
 
         # random action
         if random.random() < MobileConfig.exploration:
@@ -45,19 +43,22 @@ class Infer:
         timer.end()
         timer.print()
 
-        return (state, action)
+        Infer.state = state
+        Infer.action = action
 
 
-    def infer(self, is_first_time):
+    def infer(self):
         logging.info("Infer start")
 
-        state, action = self.__infer(is_first_time)
+        state = self.state
+        action = self.action
 
-        Reward.wait_for_reward()
+        reward = Reward.read_reward()
 
-        reward = Reward.get_reward()
+        self.__infer()
 
-        Experience.save(state, reward, action)
+        if action >= Action.INC:
+            Experience.save(state, reward, action)
 
         logging.info("Infer finish\n\n")
 

@@ -16,10 +16,10 @@ def run_infer(infer, n_infer, chkpt, timer):
     timer.start()
     infer.reset(chkpt)
 
-    infer.infer(True)
+    infer.infer()
 
-    for itr in range(n_infer-1):
-        infer.infer(False)
+    # for itr in range(n_infer):
+        # infer.infer()
 
     Experience.write()
     Experience.reset()
@@ -64,7 +64,6 @@ def driver(n_iter):
     while True:
         result = subprocess.run(['adb', 'shell', 'cat', '/sdcard/wjdoh/swappiness.txt'], stdout=subprocess.PIPE, text=True)
         if result.stdout == "":
-            logging.info("Failed to read /sdcard/wjdoh/swappiness.txt!")
             time.sleep(1)
             continue
         swappiness = int(result.stdout)
@@ -83,16 +82,15 @@ def driver(n_iter):
 
     n_infer = MobileConfig.train_batch_size
 
+    State.read_vmstat()
+    time.sleep(MobileConfig.apply_wait)
     for itr in range(n_iter):
-        State.get_state()
-        while State.delta_state.pageoutrun == 0:
-            logging.info(f"pageoutrun == 0! sleep {MobileConfig.apply_wait}")
+        State.read_vmstat()
+        if State.delta_state.pageoutrun:
+            run_infer(infer, n_infer, chkpt, timer)
+            chkpt = run_train(train, timer)
+        else:
             time.sleep(MobileConfig.apply_wait)
-            State.get_state()
-
-        run_infer(infer, n_infer, chkpt, timer)
-        chkpt = run_train(train, timer)
-
     del train
     del infer
 

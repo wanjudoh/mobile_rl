@@ -22,13 +22,23 @@ class Action:
     DEC     = 1
     STAY    = 2
     RESET   = 3
-    action_num = 4
+    # action_num = 4
+    action_num = 3
+    # action_num = 2
 
     swappiness = -1
+    swappiness_log_file = None
 
     @staticmethod
     def __init__(swappiness):
         Action.swappiness = swappiness
+
+        try:
+            Action.swappiness_log_file = open("swappiness.log", "w")
+        except:
+            print("Failed to open swappiness log")
+            exit()
+        Action.swappiness_log_file.write("START!!!!\n")
 
     @staticmethod
     def write(swappiness):
@@ -74,7 +84,8 @@ class Action:
         :return: randomly select action.
         """
 
-        return random.randint(0, 3)
+        # return random.randint(0, 3)
+        return random.randint(0, Action.action_num-1)
 
     @staticmethod
     def apply_action(action):
@@ -86,11 +97,15 @@ class Action:
         """
 
         if action == Action.INC:
-            Action.swappiness = min(199, Action.swappiness + 10)
+            Action.swappiness = min(200, Action.swappiness + 10)
+            Action.swappiness_log_file.write(f"INC {Action.swappiness}\n")
         elif action == Action.DEC:
-            Action.swappiness = max(1, Action.swappiness - 10)
-        elif action == Action.RESET:
-            Action.swappiness = 100
+            Action.swappiness = max(0, Action.swappiness - 10)
+            Action.swappiness_log_file.write(f"DEC {Action.swappiness}\n")
+        elif action == Action.STAY:
+            Action.swappiness_log_file.write(f"STAY {Action.swappiness}\n")
+        # elif action == Action.RESET:
+            # Action.swappiness = 100
 
         if action != Action.STAY:
             Action.write(Action.swappiness)
@@ -101,3 +116,7 @@ class Action:
 
         action_msg = ["Inc", "Dec", "Stay", "Reset"]
         logging.info(f"[Action] action index: {action_msg[action]} swappiness: {Action.swappiness}\n")
+
+    @staticmethod
+    def get_swappiness():
+        return Action.swappiness
