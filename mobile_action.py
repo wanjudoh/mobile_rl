@@ -39,6 +39,7 @@ class Action:
             print("Failed to open swappiness log")
             exit()
         Action.swappiness_log_file.write("START!!!!\n")
+        Action.swappiness_log_file.close()
 
     @staticmethod
     def write(swappiness):
@@ -96,16 +97,26 @@ class Action:
         @action: action to be applied
         """
 
+        try:
+            Action.swappiness_log_file = open("swappiness.log", "a")
+        except:
+            print("Failed to open swappiness log")
+            exit()
+
+        cur_time = time.time()
+
         if action == Action.INC:
             Action.swappiness = min(200, Action.swappiness + 10)
-            Action.swappiness_log_file.write(f"INC {Action.swappiness}\n")
+            Action.swappiness_log_file.write(f"{cur_time} INC {Action.swappiness}\n")
         elif action == Action.DEC:
             Action.swappiness = max(0, Action.swappiness - 10)
-            Action.swappiness_log_file.write(f"DEC {Action.swappiness}\n")
+            Action.swappiness_log_file.write(f"{cur_time} DEC {Action.swappiness}\n")
         elif action == Action.STAY:
-            Action.swappiness_log_file.write(f"STAY {Action.swappiness}\n")
+            Action.swappiness_log_file.write(f"{cur_time} STAY {Action.swappiness}\n")
         # elif action == Action.RESET:
             # Action.swappiness = 100
+
+        Action.swappiness_log_file.close()
 
         if action != Action.STAY:
             Action.write(Action.swappiness)

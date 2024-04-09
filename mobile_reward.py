@@ -22,7 +22,7 @@ class Reward:
     def read_reward():
         if Reward.delta_reward.pgpgin == 0 or Reward.delta_reward.pgalloc_normal == 0 or Reward.delta_reward.speculative_pgfault == 0:
             return None
-        return -(math.log(Reward.delta_reward.pgpgin + Reward.delta_reward.pgalloc_normal/2 + Reward.delta_reward.speculative_pgfault))
+        return -(Reward.delta_reward.pgpgin + Reward.delta_reward.pgalloc_normal/2 + Reward.delta_reward.speculative_pgfault)/1000
         # return -((Reward.delta_reward.pgpgin + Reward.delta_reward.pgalloc_normal/2 + Reward.delta_reward.speculative_pgfault))
 
     def print():
