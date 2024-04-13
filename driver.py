@@ -1,53 +1,33 @@
-from train import *
-from infer import *
+from mobile_agent import *
 from utils import *
 import subprocess
 import os
 
-def run_infer(infer, n_infer, chkpt, timer):
+def run_infer(agent, timer):
     """Driver for running infer.
 
     :param infer: Infer class instance
     :param chkpt: checkpoint to be restored
     :param timer: Timer class instance
     """
+    for itr in range(agent.batch_size):
+        agent.infer(timer)
 
-    logging.info("Infer start.") 
-    timer.start()
-    infer.reset(chkpt)
+    agent.replay_buffer.write()
 
-    infer.infer()
-
-    # for itr in range(n_infer):
-        # infer.infer()
-
-    Experience.write()
-    Experience.reset()
-
-    timer.end()
-    timer.print()
-    logging.info("Infer end.") 
-
-
-def run_train(train, timer):
+def run_train(agent, timer):
     """Driver for running train.
 
     :param train: Train class instance
     :param timer: Timer class instance
     :return: saved checkpoint file
     """
-
-    logging.info("Train start.")
-
+    logging.info("Train start")
     timer.start()
-    chkpt = train.train()
-
-    logging.info("Train end.")
+    agent.train()
     timer.end()
     timer.print()
-
-    return chkpt
-
+    logging.info("Train end")
 
 def driver(n_iter):
     """
@@ -58,8 +38,7 @@ def driver(n_iter):
     :param n_iter: Number of iterations to be runned.
     """
 
-    chkpt = "./pre-trained/checkpoint"
-
+    # initialize action
     swappiness = 0
     while True:
         result = subprocess.run(['adb', 'shell', 'cat', '/sdcard/wjdoh/swappiness.txt'], stdout=subprocess.PIPE, text=True)
@@ -69,30 +48,23 @@ def driver(n_iter):
         swappiness = int(result.stdout)
         os.system("adb shell rm /sdcard/wjdoh/swappiness.txt")
         break
-
     logging.info(f"Initial swappiness: {swappiness}")
-    Action.__init__(int(swappiness))
-    State.__init__()
-    time.sleep(MobileConfig.apply_wait)
+    Action.__init__(swappiness)
 
-    # infer = Infer(chkpt)
-    infer = Infer()
-    train = Train()
     timer = Timer()
 
-    n_infer = MobileConfig.train_batch_size
+    agent = MobileAgent()
 
-    State.read_vmstat()
-    time.sleep(MobileConfig.apply_wait)
+    # initialize state & reward
+    agent.read_vmstat()
+    time.sleep(MobileConfig.interval_s)
+
     for itr in range(n_iter):
-        State.read_vmstat()
-        if State.delta_state.pageoutrun:
-            run_infer(infer, n_infer, chkpt, timer)
-            chkpt = run_train(train, timer)
-        else:
-            time.sleep(MobileConfig.apply_wait)
-    del train
-    del infer
+        run_infer(agent, timer)
+        run_train(agent, timer)
+
+    del agent
+    del timer
 
 
 if __name__ == "__main__":
