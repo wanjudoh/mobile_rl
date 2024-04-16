@@ -24,6 +24,7 @@ class Vmstats:
     pageoutrun:     int = 0
     pgalloc_normal: int = 0
     pgsteal_kswapd: int = 0
+    pgscan_kswapd:  int = 0
     speculative_pgfault:    int = 0
 
 class Timer:
@@ -69,7 +70,7 @@ def print_state(vmstat):
 
 def read_vmstat(raw_vmstat):
     try:
-        result = subprocess.run(["adb", "shell", "grep", "-E", "'pgsteal_kswapd|pgpgin|pgpgout|pswpin|pswpout|pgalloc_normal|pageoutrun|speculative_pgfault |nr_active|nr_inactive'", \
+        result = subprocess.run(["adb", "shell", "grep", "-E", "'_kswapd|pgpgin|pgpgout|pswpin|pswpout|pgalloc_normal|pageoutrun|speculative_pgfault |nr_active|nr_inactive'", \
                                  "/proc/vmstat", "|", "awk", "'{print $2}'"], stdout=subprocess.PIPE, text=True)
     except:
         logging.info("read /proc/vmstat failed.")
@@ -87,8 +88,9 @@ def read_vmstat(raw_vmstat):
             pswpout         = int(stats[7]) - raw_vmstat.pswpout,
             pgalloc_normal  = int(stats[8]) - raw_vmstat.pgalloc_normal,
             pgsteal_kswapd  = int(stats[9]) - raw_vmstat.pgsteal_kswapd,
-            pageoutrun      = int(stats[10]) - raw_vmstat.pageoutrun,
-            speculative_pgfault = int(stats[11]) - raw_vmstat.speculative_pgfault,
+            pgscan_kswapd   = int(stats[10]) - raw_vmstat.pgscan_kswapd,
+            pageoutrun      = int(stats[11]) - raw_vmstat.pageoutrun,
+            speculative_pgfault = int(stats[12]) - raw_vmstat.speculative_pgfault,
     )
     raw_vmstat = Vmstats(
             pgpgin          = int(stats[4]),
@@ -97,8 +99,9 @@ def read_vmstat(raw_vmstat):
             pswpout         = int(stats[7]),
             pgalloc_normal  = int(stats[8]),
             pgsteal_kswapd  = int(stats[9]),
-            pageoutrun      = int(stats[10]),
-            speculative_pgfault = int(stats[11]),
+            pgscan_kswapd   = int(stats[10]),
+            pageoutrun      = int(stats[11]),
+            speculative_pgfault = int(stats[12]),
     )
     print_state(delta_vmstat)
     return raw_vmstat, delta_vmstat

@@ -81,9 +81,7 @@ class MobileEnv_v1(gym.Env):
                 break
 
     def get_reward(self, vmstat):
-        reward = (vmstat.pgsteal_kswapd)/ \
-            (vmstat.pgpgin + vmstat.pgalloc_normal/2 + vmstat.speculative_pgfault)
-
+        reward = np.log((vmstat.pgsteal_kswapd+1)/(vmstat.pgscan_kswapd+1)) + 1
         logging.info(f"[REWARD] {reward}")
         return reward
 
