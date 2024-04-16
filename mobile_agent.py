@@ -5,7 +5,7 @@ from utils import *
 import numpy as np
 
 class MobileAgent:
-    def __init__(self, select_env=MobileConfig.environment, chkpt=None):
+    def __init__(self, select_env=MobileConfig.environment, chkpt="./pre-trained/checkpoint"):
         logging.info("Agent initializing.")
 
         self.interval_s = MobileConfig.interval_s
@@ -16,6 +16,7 @@ class MobileAgent:
         rl_config.rllib_init(select_env)
         self.agent = rl_config.rllib_agent_config(1, select_env)
         if chkpt:
+            logging.info("Restore pre-trained model.\n")
             self.agent.restore(chkpt)
 
         logging.info("Agent initialize complete.")

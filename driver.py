@@ -3,6 +3,19 @@ from mobile_config import MobileConfig
 from state_buffer import StateBuffer
 from utils import *
 import time
+import signal
+import sys
+import logging
+
+agent = None
+
+def signal_handler(sig, frame):
+    global agent
+    logging.info("Interrupt occurred! Save the checkpoint. \n")
+    saved_chkpt = agent.agent.save(MobileConfig.chkpt_root)
+    sys.exit(0)
+
+signal.signal(signal.SIGINT, signal_handler)
 
 def driver(n_iter):
     """
@@ -12,10 +25,10 @@ def driver(n_iter):
 
     :param n_iter: Number of iterations to be runned.
     """
-
+    global agent
     timer = Timer()
     agent = MobileAgent()
-
+    
     # initialize state & reward
     raw_vmstat, _ = read_vmstat(Vmstats())
     time.sleep(MobileConfig.interval_s)
@@ -25,8 +38,10 @@ def driver(n_iter):
         raw_vmstat, delta_vmstat = read_vmstat(raw_vmstat)
 
     StateBuffer.write(delta_vmstat)
-    for itr in range(n_iter):
+    for itr in range(4):
         agent.agent.train()
+
+    #saved_chkpt = agent.agent.save(MobileConfig.chkpt_root)
 
     del agent
     del timer
