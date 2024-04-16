@@ -1,6 +1,6 @@
 #!/system/bin/sh
 
-log_dir="/sdcard/syko/evaluation"
+log_dir="/sdcard/wjdoh/evaluation"
 
 DATE="$(date +%m%d%H%M)"
 log_dir="${log_dir}/${DATE}"
@@ -16,29 +16,17 @@ touch ${vmlog}
 swaplog="${log_dir}/swap.log"
 touch ${swaplog}
 
-pidlog="${log_dir}/pid.log"
-touch ${pidlog}
-
-
-
 swappiness_path=/proc/sys/vm/swappiness
 swappiness_interface=swappiness.txt
 
 function swappiness_monitor() {
-    cat ${swappiness_path} > ${swappiness_interface}
-
-    while [ -e ${swappiness_interface} ];
-    do
-        echo "swappiness.txt exist"
-        sleep 10
-    done
-
     while :
     do
         if [ -e ${swappiness_interface} ]; then
-            cat ${swappiness_interface} > /proc/sys/vm/swappiness
-	    cat ${swappiness_interface} >> ${swaplog}            
-	    rm ${swappiness_interface}
+            swappiness=$(cat ${swappiness_interface})
+	        rm ${swappiness_interface}
+            echo ${swappiness} > /proc/sys/vm/swappiness
+	        echo "$(date +%H%M%S), ${swappiness}" >> ${swaplog}            
             sleep 5
         else
             sleep 1
@@ -76,8 +64,6 @@ function chrome() {
     cat /proc/vmstat >> ${vmlog}
     am start -W -n com.android.chrome/com.google.android.apps.chrome.Main 2>&1 | tee -a "${amlog}"
     cat /proc/vmstat >> ${vmlog}
-    echo "chrome" >> ${pidlog}
-    ps -ef | grep com.android.chrome/com.google.android.apps.chrome.Main >> ${pidlog}
 
     sleep 3
 
@@ -108,8 +94,6 @@ function chrome_anon() {
     cat /proc/vmstat >> ${vmlog}
     am start -W -n com.android.chrome/com.google.android.apps.chrome.Main 2>&1 | tee -a "${amlog}"
     cat /proc/vmstat >> ${vmlog}
-    echo "chrome" >> ${pidlog}
-    ps -ef | grep com.android.chrome/com.google.android.apps.chrome.Main >> ${pidlog}
 
     sleep 3
 
@@ -233,8 +217,6 @@ function youtube() {
     am start -W -n com.google.android.youtube/com.google.android.apps.youtube.app.watchwhile.WatchWhileActivity 2>&1 | tee -a "${amlog}"
     cat /proc/vmstat >> ${vmlog}
 
-    echo "youtube" >> ${pidlog}
-    ps -ef | grep com.google.android.youtube/com.google.android.apps.youtube.app.watchwhile.WatchWhileActivity >> ${pidlog}
 
     sleep 3
     input tap 730 2300
@@ -278,8 +260,6 @@ function reddit() {
     am start -W -n com.reddit.frontpage/launcher.default 2>&1 | tee -a "${amlog}"
     cat /proc/vmstat >> ${vmlog}
    
-    echo "reddit" >> ${pidlog}
-    ps -ef | grep com.reddit.frontpage/launcher.default >> ${pidlog}
 
     sleep 3
 
@@ -306,8 +286,6 @@ function facebook() {
     am start -W -n com.facebook.katana/.LoginActivity 2>&1 | tee -a "${amlog}"
     cat /proc/vmstat >> ${vmlog}
 
-    echo "facebook" >> ${pidlog}
-    ps -ef | grep com.facebook.katana/.LoginActivity >> ${pidlog}
 
     sleep 3
 
@@ -339,8 +317,6 @@ function facebook_anon() {
     am start -W -n com.facebook.katana/.LoginActivity 2>&1 | tee -a "${amlog}"
     cat /proc/vmstat >> ${vmlog}
 
-    echo "facebook" >> ${pidlog}
-    ps -ef | grep com.facebook.katana/.LoginActivity >> ${pidlog}
 
     sleep 3
 
@@ -459,8 +435,6 @@ function twitter() {
     am start -W -n com.twitter.android/.StartActivity 2>&1 | tee -a "${amlog}"
     cat /proc/vmstat >> ${vmlog}
 
-    echo "twitter" >> ${pidlog}
-    ps -ef | grep com.twitter.android/.StartActivity >> ${pidlog}    
 
     sleep 3
 
@@ -492,8 +466,6 @@ function twitter_anon() {
     am start -W -n com.twitter.android/.StartActivity 2>&1 | tee -a "${amlog}"
     cat /proc/vmstat >> ${vmlog}
 
-    echo "twitter" >> ${pidlog}
-    ps -ef | grep com.twitter.android/.StartActivity >> ${pidlog}
 
     sleep 3
 
@@ -573,8 +545,6 @@ function googlemap() {
     am start -W -n com.google.android.apps.maps/com.google.android.maps.MapsActivity 2>&1 | tee -a "${amlog}"
     cat /proc/vmstat >> ${vmlog}
 
-    echo "googlemap" >> ${pidlog}
-    ps -ef | grep com.google.android.apps.maps/com.google.android.maps.MapsActivity >> ${pidlog}
 
     sleep 3
 
@@ -618,8 +588,6 @@ function tiktok() {
     am start -W -n com.ss.android.ugc.trill/com.ss.android.ugc.aweme.splash.SplashActivity 2>&1 | tee -a "${amlog}"
     cat /proc/vmstat >> ${vmlog}
 
-    echo "tiktok" >> ${pidlog}
-    ps -ef | grep com.ss.android.ugc.trill/com.ss.android.ugc.aweme.splash.SplashActivity >> ${pidlog}
 
 
     sleep 3
@@ -651,9 +619,6 @@ function tiktok_anon() {
     cat /proc/vmstat >> ${vmlog}
     am start -W -n com.ss.android.ugc.trill/com.ss.android.ugc.aweme.splash.SplashActivity 2>&1 | tee -a "${amlog}"
     cat /proc/vmstat >> ${vmlog}
-
-    echo "tiktok" >> ${pidlog}
-    ps -ef | grep com.ss.android.ugc.trill/com.ss.android.ugc.aweme.splash.SplashActivity >> ${pidlog}
 
 
     sleep 3
@@ -733,8 +698,6 @@ function camera() {
     am start -W -n com.google.android.GoogleCamera/com.android.camera.CameraLauncher 2>&1 | tee -a "${amlog}"
     cat /proc/vmstat >> ${vmlog}
 
-    echo "camera" >> ${pidlog}
-    ps -ef | grep com.google.android.GoogleCamera/com.android.camera.CameraLauncher >> ${pidlog}
 
 
     sleep 3
@@ -807,8 +770,6 @@ function gmail() {
     am start -W -n com.google.android.gm/.ConversationListActivityGmail 2>&1 | tee -a "${amlog}"
     cat /proc/vmstat >> ${vmlog}
 
-    echo "gmail" >> ${pidlog}
-    ps -ef | grep com.google.android.gm/.ConversationListActivityGmail >> ${pidlog}
 
 
     sleep 3
@@ -873,8 +834,6 @@ function angrybird() {
     am start -W -n com.rovio.baba/com.unity3d.player.UnityPlayerActivity 2>&1 | tee -a "${amlog}"
     cat /proc/vmstat >> ${vmlog}
 
-    echo "angrybird" >> ${pidlog}
-    ps -ef | grep com.rovio.baba/com.unity3d.player.UnityPlayerActivity >> ${pidlog}
 
 
     sleep 30
@@ -909,8 +868,6 @@ function candycrush() {
     am start -W -n com.king.candycrushsaga/.CandyCrushSagaActivity 2>&1 | tee -a "${amlog}"
     cat /proc/vmstat >> ${vmlog}
 
-    echo "candycrush" >> ${pidlog}
-    ps -ef | grep com.king.candycrushsaga/.CandyCrushSagaActivity >> ${pidlog}
 
 
     sleep 10
@@ -952,8 +909,6 @@ function nytimes() {
     am start -W -n com.nytimes.android/.MainActivity 2>&1 | tee -a "${amlog}"
     cat /proc/vmstat >> ${vmlog}
 
-    echo "nytimes" >> ${pidlog}
-    ps -ef | grep com.nytimes.android/.MainActivity >> ${pidlog}
 
 
     sleep 10
@@ -995,8 +950,6 @@ function quora() {
     am start -W -n com.quora.android/.components.activities.LauncherActivity 2>&1 | tee -a "${amlog}"
     cat /proc/vmstat >> ${vmlog}
 
-    echo "quora" >> ${pidlog}
-    ps -ef | grep com.quora.android/.components.activities.LauncherActivity >> ${pidlog}
 
 
     sleep 10
@@ -1137,14 +1090,17 @@ echo "TEST START!"
 echo "INIT ZRAM"
 init_zram
 
-swappiness_monitor &
-swappiness_monitor_pid="$!"
-echo "MONITOR PID = ${swappiness_monitor_pid}"
+#swappiness_monitor &
+#swappiness_monitor_pid="$!"
+#echo "MONITOR PID = ${swappiness_monitor_pid}"
 
 # Use LITTLE cores
-taskset -p f ${swappiness_monitor_pid}
+#taskset -p f ${swappiness_monitor_pid}
 
 input keyevent KEYCODE_POWER
+sleep 1
+
+input swipe 100 1500 100 450 100
 sleep 1
 
 echo "DROP CACHE"
@@ -1154,8 +1110,8 @@ echo "FORCE STOP"
 force_stop
 
 echo "APP SEQ START"
-file_seq
-#anon_seq
+#file_seq
+anon_seq
 #my_seq
 
 echo "FORCE STOP"
@@ -1163,5 +1119,5 @@ force_stop
 
 echo "TEST END!"
 
-kill -9 ${swappiness_monitor_pid}
+#kill -9 ${swappiness_monitor_pid}
 input keyevent KEYCODE_POWER

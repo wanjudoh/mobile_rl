@@ -5,12 +5,10 @@ from utils import *
 import numpy as np
 
 class MobileAgent:
-    def __init__(self, select_env="mobile", chkpt=None):
+    def __init__(self, select_env=MobileConfig.environment, chkpt=None):
         logging.info("Agent initializing.")
 
         self.interval_s = MobileConfig.interval_s
-
-        StateBuffer.write(Vmstats())
         self.state = np.array([0.0] * MobileConfig.nr_state, dtype=np.float32)
         self.action = -1
 

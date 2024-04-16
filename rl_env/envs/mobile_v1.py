@@ -9,42 +9,47 @@ from mobile_config import MobileConfig
 from state_buffer import StateBuffer
 from utils import *
 
-class MobileEnv(gym.Env):
+class MobileEnv_v1(gym.Env):
     """
-    Environment for RL training. Set 'select_env="mobilev2"' to use.
+    Environment for RL training. Set environment = "mobile_v1" to use.
 
-    MobileEnv gets state and reward from the experience buffer.
-    The values are calculated when storing in the experience buffer.
+    MobileEnv_v1 has a total of 21 output nodes, each representing
+    swappiness values of 0, 10, 20, ..., 190, and 200.
+
+    The swappiness is obtained by taking the argmax of each node's values.
     """
 
     metadata = { "render.modes": ["rgb_array"] }
 
     def __init__(self):
         # self.action_space = gym.spaces.Discrete(201) # 0~200
-        self.action_space = gym.spaces.Box(
-                                    low=-0.0,
-                                    high=200.0,
-                                    shape=(),
-                                    dtype=np.float32)
-
         self.observation_space = gym.spaces.Box(
                                     low=-0.0,
                                     high=np.inf,
                                     shape=(MobileConfig.nr_state,),
                                     dtype=np.float32)
 
+        self.action_space = gym.spaces.Box(
+                                    low=-0.0,
+                                    high=np.inf,
+                                    shape=(MobileConfig.nr_action,),
+                                    dtype=np.float32)
+
         self.reset()
 
     def get_state(self, vmstat):
+        nr_evictable_pages = vmstat["inactive_anon"] + vmstat["active_anon"] \
+            + vmstat["inactive_file"] + vmstat["active_file"]
+        mult = 100 / nr_evictable_pages
         return np.array([
             vmstat["pgpgin"],
-            vmstat["pgpgout"],
+            # vmstat["pgpgout"],
             vmstat["pswpin"],
-            vmstat["pswpout"],
-            vmstat["inactive_anon"],
-            vmstat["active_anon"],
-            vmstat["inactive_file"],
-            vmstat["active_file"]
+            # vmstat["pswpout"],
+            int(vmstat["inactive_anon"] * mult),
+            int(vmstat["active_anon"] * mult),
+            int(vmstat["inactive_file"] * mult),
+            int(vmstat["active_file"] * mult)
         ], dtype=np.float32)
 
 
@@ -83,10 +88,8 @@ class MobileEnv(gym.Env):
         return reward
 
     def step(self, action):
-        # self.replay_buf = ReplayBuffer.read()
-        # print(f"replay buf: {self.replay_buf}")
-        action = int(action)
-        # print(f"state {self.state} action {action}")
+        action = np.argmax(action)*10
+        # action = int(action)
         logging.info(f"[STEP] state: {self.state}, action: {action}")
         self.write_swappiness(action)
 
@@ -104,8 +107,8 @@ class MobileEnv(gym.Env):
         raw_vmstat, delta_vmstat = read_vmstat(raw_vmstat)
 
         while read_meminfo() >= MobileConfig.wmark:
-            raw_vmstat, delta_vmstat = read_vmstat(raw_vmstat)
             time.sleep(MobileConfig.interval_s)
+            raw_vmstat, delta_vmstat = read_vmstat(raw_vmstat)
 
         StateBuffer.write(delta_vmstat)
 

@@ -1,5 +1,6 @@
 from mobile_agent import MobileAgent
 from mobile_config import MobileConfig
+from state_buffer import StateBuffer
 from utils import *
 import time
 
@@ -22,7 +23,8 @@ def driver(n_iter):
     while read_meminfo() >= MobileConfig.wmark:
         time.sleep(MobileConfig.interval_s)
         raw_vmstat, delta_vmstat = read_vmstat(raw_vmstat)
-    
+
+    StateBuffer.write(delta_vmstat)
     for itr in range(n_iter):
         agent.agent.train()
 

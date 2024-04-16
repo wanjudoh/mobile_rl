@@ -1,4 +1,5 @@
-from rl_env.envs.mobile import MobileEnv
+from rl_env.envs.mobile_v0 import MobileEnv_v0
+from rl_env.envs.mobile_v1 import MobileEnv_v1
 from mobile_config import MobileConfig
 import shutil
 import ray
@@ -29,7 +30,12 @@ class RL_Config:
         ray.init(ignore_reinit_error=True, logging_level="ERROR", num_cpus=4)
 
         # register the custom environment
-        register_env(select_env, lambda config: MobileEnv())
+        if MobileConfig.environment == "mobile_v0":
+            register_env(select_env, lambda config: MobileEnv_v0())
+        elif MobileConfig.environment == "mobile_v1":
+            register_env(select_env, lambda config: MobileEnv_v1())
+        else:
+            print("environment error!")
 
     def rllib_agent_config(self, num_workers, select_env):
         """
