@@ -5,13 +5,10 @@ class MobileConfig:
     # Wait seconds after applying action
     interval_s:     int = 10
 
-    # probability of choosing random action instead of using trained model
-    epsilon:        float = 0.05
-
-    # startup_file_path:  str = "/home/wjdoh/rl_m3/startup.txt"
-
-    batch_size:     int = 4
-
-    buffer_size:    int = 500
-
+    # number of components in the state
     nr_state:       int = 8
+
+    # infer swappiness when the free memory is below the wmark
+    wmark:          int = 5
+
+    chkpt_root:     str = "./chkpt"

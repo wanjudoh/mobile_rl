@@ -1,33 +1,7 @@
-from mobile_agent import *
+from mobile_agent import MobileAgent
+from mobile_config import MobileConfig
 from utils import *
-import subprocess
-import os
-
-def run_infer(agent, timer):
-    """Driver for running infer.
-
-    :param infer: Infer class instance
-    :param chkpt: checkpoint to be restored
-    :param timer: Timer class instance
-    """
-    for itr in range(agent.batch_size):
-        agent.infer(timer)
-
-    agent.replay_buffer.write()
-
-def run_train(agent, timer):
-    """Driver for running train.
-
-    :param train: Train class instance
-    :param timer: Timer class instance
-    :return: saved checkpoint file
-    """
-    logging.info("Train start")
-    timer.start()
-    agent.train()
-    timer.end()
-    timer.print()
-    logging.info("Train end")
+import time
 
 def driver(n_iter):
     """
@@ -38,30 +12,19 @@ def driver(n_iter):
     :param n_iter: Number of iterations to be runned.
     """
 
-    # initialize action
-    swappiness = 0
-    while True:
-        result = subprocess.run(['adb', 'shell', 'cat', '/sdcard/wjdoh/swappiness.txt'], stdout=subprocess.PIPE, text=True)
-        if result.stdout == "":
-            time.sleep(1)
-            continue
-        swappiness = int(result.stdout)
-        os.system("adb shell rm /sdcard/wjdoh/swappiness.txt")
-        break
-    logging.info(f"Initial swappiness: {swappiness}")
-    Action.__init__(swappiness)
-
     timer = Timer()
-
     agent = MobileAgent()
 
     # initialize state & reward
-    agent.read_vmstat()
+    raw_vmstat, _ = read_vmstat(Vmstats())
     time.sleep(MobileConfig.interval_s)
-
+    raw_vmstat, delta_vmstat = read_vmstat(raw_vmstat)
+    while read_meminfo() >= MobileConfig.wmark:
+        time.sleep(MobileConfig.interval_s)
+        raw_vmstat, delta_vmstat = read_vmstat(raw_vmstat)
+    
     for itr in range(n_iter):
-        run_infer(agent, timer)
-        run_train(agent, timer)
+        agent.agent.train()
 
     del agent
     del timer

@@ -1,15 +1,9 @@
-import setuptools
 from rl_env.envs.mobile import MobileEnv
-from ray.tune.registry import register_env
+from mobile_config import MobileConfig
 import shutil
-import gym
-# import gymnasium as gym
 import ray
-from ray import tune
-# from ray.rllib.algorithms.ppo import PPOConfig
-# from ray.rllib.algorithms.ppo import ppo
+from ray.tune.registry import register_env
 from ray.rllib.agents import ppo
-from mobile_config import *
 
 class RL_Config:
     """Set rllib configurations and algorithm"""
@@ -26,15 +20,16 @@ class RL_Config:
         :param select_env: environment id
         """
 
-        self.chkpt_root = "./chkpt"
-        self.ray_results = "./ray_results/"
+        shutil.rmtree(MobileConfig.chkpt_root, ignore_errors=True, onerror=None)
+
+        # ray_results = "./ray_results/"
+        # shutil.rmtree(ray_results, ignore_errors=True, onerror=None)
 
         # start Ray -- add `local_mode=True` here for debugging
-        ray.init(ignore_reinit_error=True, logging_level="ERROR", num_cpus=1)
+        ray.init(ignore_reinit_error=True, logging_level="ERROR", num_cpus=4)
 
         # register the custom environment
         register_env(select_env, lambda config: MobileEnv())
-
 
     def rllib_agent_config(self, num_workers, select_env):
         """
@@ -49,15 +44,15 @@ class RL_Config:
         config = ppo.DEFAULT_CONFIG.copy()
 
         config["framework"] = "tf2"
-        config["horizon"] = MobileConfig.batch_size
-        config["num_workers"] = num_workers
-        config["train_batch_size"] = MobileConfig.batch_size
-        config["batch_mode"] = "complete_episodes"
+        config["model"]["fcnet_hiddens"] = [16, 32]
         config["lr"] = 0.01
         config["gamma"] = 0.9
-        config["sgd_minibatch_size"] = MobileConfig.batch_size
-        config["model"]["fcnet_hiddens"] = [16, 32]
         config["explore"] = True
+        config["horizon"] = 1
+        config["train_batch_size"] = 1
+        config["sgd_minibatch_size"] = 1
+        config["num_workers"] = num_workers
+        config["batch_mode"] = "complete_episodes"
         config["disable_env_checking"] = True
 
         agent = ppo.PPOTrainer(config, env=select_env)
